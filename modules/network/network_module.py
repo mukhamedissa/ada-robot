@@ -181,9 +181,10 @@ class NetworkModule(BaseModule):
             image_rel_path = "asc_3.png"
             image_path = os.path.join("assets", "img", image_rel_path)
             self.event_manager.emit(
-                EventType.DISPLAY_IMAGE,
+                EventType.DISPLAY_VALORANT_INFO,
                 data={
-                    'image_path': image_path,
+                    'account_info': parsed,
+                    'rank_icon': image_path,
                     'duration': 5.0
                 },
                 source='network'

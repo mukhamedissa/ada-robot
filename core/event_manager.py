@@ -11,6 +11,8 @@ class EventType(Enum):
     DISPLAY_LOOK = auto()
     DISPLAY_ANIMATION = auto()
     DISPLAY_IMAGE = auto()
+
+    DISPLAY_VALORANT_INFO = auto()
     
     CAMERA_FRAME = auto()
     FACE_DETECTED = auto()

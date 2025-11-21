@@ -9,7 +9,7 @@ class RoboEye:
     BLINK_DURATION = 0.15
     SMILE_DURATION = 0.7
     SMILE_HEIGHT_FACTOR = 0.6
-    SMILE_BOTTOM_RADIUS_FACTOR = 0.8
+    SMILE_TOP_RADIUS_FACTOR = 0.8
     HEART_DURATION = 1.0
     HEART_ANIMATION_PHASE = 0.3
     
@@ -36,6 +36,9 @@ class RoboEye:
             AnimationType.SMILE: AnimationState(),
             AnimationType.HEART: AnimationState(),
         }
+
+        self.SMILE_DELAY_DURATION = 1 
+        self.smile_delay_start_time = None
         
         self.heart_scale = 0.0
     
@@ -119,8 +122,8 @@ class RoboEye:
         progress = anim.get_progress()
         
         target_height = self.height * self.SMILE_HEIGHT_FACTOR
-        target_bottom_radius = target_height * self.SMILE_BOTTOM_RADIUS_FACTOR
-        target_top_radius = self.original_border_radius * 0.5
+        target_top_radius = target_height * self.SMILE_TOP_RADIUS_FACTOR
+        target_bottom_radius = self.original_border_radius * 0.5
         
         phase_duration = 1.0 / 3.0
         

@@ -4,6 +4,7 @@ import os
 import time
 from modules.base_module import BaseModule
 from modules.display.eyes_controller import RoboEyesController
+from modules.display.renderers.valorant_info_renderer import ValorantInfoRenderer
 from core.event_manager import EventType, Event
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,11 @@ class DisplayModule(BaseModule):
         self.image_start_time = 0
         self.image_display_duration = 0
 
+        self.display_valorant_info = False
+
+        self.current_renderer_key = None
+        self.current_renderer_data = None
+
     def get_name(self) -> str:
         return "display"
     
@@ -45,6 +51,10 @@ class DisplayModule(BaseModule):
         
         self.clock = pygame.time.Clock()
         
+        self.renderers = {
+            'valorant_info': ValorantInfoRenderer(self.screen, self.project_root)
+        }
+
         self.background = pygame.Surface(
             (self.config.SCREEN_WIDTH, self.config.SCREEN_HEIGHT)
         )
@@ -69,6 +79,7 @@ class DisplayModule(BaseModule):
             self.event_manager.subscribe(EventType.DISPLAY_LOOK, self._on_look_event)
             self.event_manager.subscribe(EventType.FACE_DETECTED, self._on_face_detected)
             self.event_manager.subscribe(EventType.DISPLAY_IMAGE, self._on_display_image)
+            self.event_manager.subscribe(EventType.DISPLAY_VALORANT_INFO, self._on_display_valorant_info)
     
     def _on_emotion_event(self, event: Event):
         emotion = event.data.get('emotion')
@@ -122,6 +133,13 @@ class DisplayModule(BaseModule):
                     print(f"Failed to load image {full_path}: {e}")
             else:
                 print(f"Image file not found: {full_path}")
+
+    def _on_display_valorant_info(self, event):
+        self.current_renderer_key = 'valorant_info'
+        self.current_renderer_data = event.data
+        self.display_active_start_time = time.time()
+        self.display_duration = event.data.get('duration', 0)
+        self.display_valorant_info = True
     
     def update(self):
         for event in pygame.event.get():
@@ -138,6 +156,13 @@ class DisplayModule(BaseModule):
             if elapsed >= self.image_display_duration:
                 self.display_image = False
                 self.current_image = None
+
+        if self.current_renderer_key == 'valorant_info' and self.display_duration > 0:
+            elapsed = time.time() - self.display_active_start_time
+            if elapsed >= self.display_duration:
+                self.current_renderer_key = None
+                self.current_renderer_data = None
+                self.display_valorant_info = False
         
         self.eyes_controller.update()
         
@@ -160,7 +185,15 @@ class DisplayModule(BaseModule):
     
     def _render(self):
         current_rects = []
-        if self.display_image and self.current_image:
+        if self.current_renderer_key:
+            renderer = self.renderers.get(self.current_renderer_key)
+            if renderer and self.current_renderer_data:
+                self.screen.blit(self.background, (0, 0))
+                renderer.render(self.current_renderer_data)
+            full_screen_rect = self.screen.get_rect()
+            pygame.display.update(full_screen_rect)
+            current_rects = [full_screen_rect]
+        elif self.display_image and self.current_image:
             self.screen.blit(self.background, (0, 0))
             
             screen_width, screen_height = self.screen.get_size()
